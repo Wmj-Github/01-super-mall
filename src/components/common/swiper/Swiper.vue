@@ -30,6 +30,7 @@
         type: Number,
         default: 0.25
       },
+      //显示指示器
       showIndicator: {
         type: Boolean,
         default: true
@@ -37,11 +38,11 @@
     },
     data: function () {
       return {
-        slideCount: 0, // 元素个数
-        totalWidth: 0, // swiper的宽度
-        swiperStyle: {}, // swiper样式
-        currentIndex: 1, // 当前的index
-        scrolling: false, // 是否正在滚动
+        slideCount: 0,    //元素个数
+        totalWidth: 0,    //swiper的宽度
+        swiperStyle: {},  //swiper样式
+        currentIndex: 1,  //当前的index
+        scrolling: false, //是否正在滚动
       }
     },
     mounted: function () {
@@ -172,9 +173,9 @@
         if (this.distance === 0) {
           return
         } else if (this.distance > 0 && currentMove > this.totalWidth * this.moveRatio) { // 右边移动超过0.5
-          this.currentIndex--
+          this.currentIndex--;
         } else if (this.distance < 0 && currentMove > this.totalWidth * this.moveRatio) { // 向左移动超过0.5
-          this.currentIndex++
+          this.currentIndex++;
         }
 
         // 3.移动到正确的位置
