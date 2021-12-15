@@ -37,24 +37,38 @@
       });
 
       //2、监听滚动的位置
-      this.scroll.on('scroll', (position) => {
-        this.$emit('scroll', position);
-      });
+      if(this.probeType === 2 || this.probeType === 3) {
+        this.scroll.on('scroll', (position) => {
+          this.$emit('scroll', position);
+        });
+      }
 
-      //3、监听上拉事件
-      this.scroll.on('pullingUp', () => {
-        this.$emit('pullingUp');
-      });
+      //3、监听上拉加载事件
+      if(this.pullUpLoad) {
+        this.scroll.on('pullingUp', () => {
+          this.$emit('pullingUp');
+        });
+      }
     },
     methods: {
       //回到顶部
       scrollTo(x, y, time=300) {
-        this.scroll.scrollTo(x, y, time);
+        this.scroll && this.scroll.scrollTo(x, y, time);
       },
 
-      //实现多次上拉加载
+      //完成上拉加载更多
       finishPullUp() {
-        this.scroll.finishPullUp();
+        this.scroll && this.scroll.finishPullUp();
+      },
+
+      //首页图片加载刷新
+      refresh() {
+        this.scroll && this.scroll.refresh();
+      },
+
+      //获取当前滑动距离顶部的位置
+      getScrollY() {
+        return this.scroll ? this.scroll.y : 0;
       }
     }
   }

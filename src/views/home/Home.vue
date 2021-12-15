@@ -1,11 +1,13 @@
 <template>
   <div id="home" class="wrapper">
     <nav-bar class="home-nav"><div slot="center">购物街</div></nav-bar>
+    <tab-control :titles="['流行', '新款', '精选']" @tabClick="tabClick" ref="tabControl1" class="tabControl" v-show="isTabFixed"></tab-control>
+
     <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll" :pull-up-load="true" @pullingUp="loadMore">
-      <home-swiper :banner="banner"></home-swiper>
+      <home-swiper :banner="banner" @swiperImageLoad="swiperImageLoad"></home-swiper>
       <home-recommend-view :recommend="recommend"></home-recommend-view>
       <home-feature-view></home-feature-view>
-      <tab-control class="tab-control" :titles="['流行', '新款', '精选']" @tabClick="tabClick"></tab-control>
+      <tab-control :titles="['流行', '新款', '精选']" @tabClick="tabClick" ref="tabControl2"></tab-control>
       <goods-list :goodsList="showGoods"></goods-list>
     </scroll>
 
@@ -26,6 +28,7 @@
   import HomeFeatureView from "./childComps/HomeFeatureView";
 
   import {getHomeMultidata, getHomeGoodsList} from "../../network/home";
+  import {debounce} from "../../common/utils";
 
   export default {
     name: "Home",
@@ -51,6 +54,9 @@
         },
         currentType: 'pop',   //首页当前选中的商品类型
         isShowBackTop: false, //是否显示回到顶部图标
+        tabOffsetTop: 0,      //获取tabControl的offsetTop
+        isTabFixed: false,    //tabControl是否吸顶
+        saveCurrentTop: 0,    //保存当前滑动距离顶部的位置
       }
     },
     created() {
@@ -62,10 +68,24 @@
       this.getHomeGoodsList('new');
       this.getHomeGoodsList('sell');
     },
+    mounted() {
+      //监听item中图片加载完成
+      const refresh = debounce(this.$refs.scroll.refresh, 500);
+      this.$bus.$on('itemImageLoaded', () => {
+        refresh();
+      });
+    },
     computed: {
       showGoods() {
         return this.goodsList[this.currentType].list;
       }
+    },
+    activated() {
+      this.$refs.scroll.scrollTo(0, this.saveCurrentTop, 0);
+      this.$refs.scroll.refresh();
+    },
+    deactivated() {
+      this.saveCurrentTop = this.$refs.scroll.getScrollY();
     },
     methods: {
       /**
@@ -84,6 +104,8 @@
             this.currentType = 'sell';
             break;
         }
+        this.$refs.tabControl1.currentIndex = index;
+        this.$refs.tabControl2.currentIndex = index;
       },
 
       //回到顶部
@@ -93,15 +115,22 @@
 
       //当下拉距离超出多少时显示"回到顶部"图标
       contentScroll(position) {
+        //判断BackTop是否显示
         this.isShowBackTop = -position.y > 1000;
+
+        //判断tabControl是否吸顶（position: fixed）
+        this.isTabFixed = (-position.y) > this.tabOffsetTop;
       },
 
       //上拉加载更多
       loadMore() {
-        console.log("上拉加载");
         this.getHomeGoodsList(this.currentType);
       },
 
+      //获取tabControl的offsetTop【所有的组件都有一个属性$el：用于获取组件中的元素】
+      swiperImageLoad() {
+        this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop;
+      },
 
       /**
        * 网络请求相关方法
@@ -121,6 +150,7 @@
           this.goodsList[type].list.push(...res.data.list);
           this.goodsList[type].page += 1;
 
+          //完成下拉加载更多
           this.$refs.scroll.finishPullUp();
         });
       },
@@ -147,9 +177,7 @@
     /*z-index: 999;*/
   }
 
-  .tab-control {
-    /*position: sticky;*/
-    /*top: 44px;*/
+  .tabControl {
     position: relative;
     z-index: 9;
   }
