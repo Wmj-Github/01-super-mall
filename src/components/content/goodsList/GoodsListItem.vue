@@ -1,6 +1,6 @@
 <template>
   <div class="goodsListItem" @click="itemClick">
-    <img :src="goodsListItem.show.img" alt="" @load="imageLoaded">
+    <img v-lazy="showImages" alt="" @load="itemImgLoad">
     <div class="goodsInfo">
       <p>{{ goodsListItem.title }}</p>
       <span class="price">{{ goodsListItem.price }}</span>
@@ -20,15 +20,16 @@
         }
       }
     },
-    data() {
-      return {
-
+    computed: {
+      //不同页面加载图片路径不同
+      showImages() {
+        return this.goodsListItem.image || this.goodsListItem.show.img;
       }
     },
     methods: {
       //图片加载
-      imageLoaded() {
-        this.$bus.$emit('itemImageLoaded');
+      itemImgLoad() {
+        this.$bus.$emit('itemImgLoad');
       },
 
       //点击跳转详情页

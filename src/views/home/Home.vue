@@ -21,13 +21,15 @@
   import TabControl from "../../components/content/tabControl/TabControl";
   import GoodsList from "../../components/content/goodsList/GoodsList";
   import Scroll from "../../components/common/scroll/Scroll";
-  import BackTop from "../../components/content/backtop/BackTop";
+  import BackTop from "../../components/content/backTop/BackTop";
 
   import HomeSwiper from "./childComps/HomeSwiper";
   import HomeRecommendView from "./childComps/HomeRecommendView";
   import HomeFeatureView from "./childComps/HomeFeatureView";
 
   import {getHomeMultidata, getHomeGoodsList} from "../../network/home";
+
+  import {itemListenerMixin} from "../../common/mixin";
   import {debounce} from "../../common/utils";
 
   export default {
@@ -52,11 +54,13 @@
           'new': {page: 0, list: []},
           'sell': {page: 0, list: []},
         },
-        currentType: 'pop',   //首页当前选中的商品类型
-        isShowBackTop: false, //是否显示回到顶部图标
-        tabOffsetTop: 0,      //获取tabControl的offsetTop
-        isTabFixed: false,    //tabControl是否吸顶
-        saveCurrentTop: 0,    //保存当前滑动距离顶部的位置
+        currentType: 'pop',     //首页当前选中的商品类型
+        isShowBackTop: false,   //是否显示回到顶部图标
+        tabOffsetTop: 0,        //获取tabControl的offsetTop
+        isTabFixed: false,      //tabControl是否吸顶
+        saveCurrentTop: 0,      //保存当前滑动距离顶部的位置
+
+        itemImgListener: null,  //存储图片加载完成刷新函数
       }
     },
     created() {
@@ -68,12 +72,15 @@
       this.getHomeGoodsList('new');
       this.getHomeGoodsList('sell');
     },
+    // mixin: [itemListenerMixin],   //方法一：混入式做法监听图片加载（有问题）
+    //方法二：
     mounted() {
       //监听item中图片加载完成
-      const refresh = debounce(this.$refs.scroll.refresh, 500);
-      this.$bus.$on('itemImageLoaded', () => {
+      let refresh = debounce(this.$refs.scroll.refresh, 500);
+      this.itemImgListener = () => {
         refresh();
-      });
+      }
+      this.$bus.$on('itemImgLoad', this.itemImgListener);
     },
     computed: {
       showGoods() {
@@ -85,7 +92,11 @@
       this.$refs.scroll.refresh();
     },
     deactivated() {
+      //保存y值
       this.saveCurrentTop = this.$refs.scroll.getScrollY();
+
+      //取消图片加载事件监听
+      this.$bus.$off('itemImgLoad', this.itemImgListener);
     },
     methods: {
       /**
@@ -104,8 +115,13 @@
             this.currentType = 'sell';
             break;
         }
-        this.$refs.tabControl1.currentIndex = index;
-        this.$refs.tabControl2.currentIndex = index;
+
+        //让两个tabControl的currentIndex保持一致
+        if(this.$refs.tabControl1 !== undefined) {
+          this.$refs.tabControl1.currentIndex = index;
+          this.$refs.tabControl2.currentIndex = index;
+        }
+
       },
 
       //回到顶部

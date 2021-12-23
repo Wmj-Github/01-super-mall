@@ -31,17 +31,7 @@
       //点击titles
       titleClick(index) {
         this.currentIndex = index;
-        // switch (index) {
-        //   case 0:
-        //     this.currentType = 'pop';
-        //     break;
-        //   case 1:
-        //     this.currentType = 'new';
-        //     break;
-        //   case 2:
-        //     this.currentType = 'sell';
-        //     break;
-        // }
+        this.$emit('titleClick', index);
       },
 
       //返回
